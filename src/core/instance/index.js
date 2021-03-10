@@ -12,14 +12,14 @@ function Vue (options) {
   ) {
     warn('Vue is a constructor and should be called with the `new` keyword')
   }
-  // 初始化
+  // 初始化各种属性
   this._init(options)
 }
 
 initMixin(Vue) //通过该方法给Vue添加_init方法
-stateMixin(Vue)
-eventsMixin(Vue)
-lifecycleMixin(Vue)
-renderMixin(Vue)
+stateMixin(Vue) //$set,$delete,$watch
+eventsMixin(Vue) //$emit,$on,$once,%off
+lifecycleMixin(Vue) //_update(),$forceUpdate(),$destroy()
+renderMixin(Vue) //_render(),$nextTick
 
 export default Vue

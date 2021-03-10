@@ -51,14 +51,14 @@ export function initMixin (Vue: Class<Component>) {
     // expose real self
     //
     vm._self = vm
-    initLifecycle(vm) //
-    initEvents(vm)
-    initRender(vm)
+    initLifecycle(vm) // $parent, $root, $children, $refs
+    initEvents(vm) //对父组件传入事件添加监听
+    initRender(vm) //声明$slots,$createElement()
     callHook(vm, 'beforeCreate') //调用beforeCreate钩子
-    initInjections(vm) // resolve injections before data/props
-    initState(vm)
-    initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    initInjections(vm) // 注入数据（不会做响应式）
+    initState(vm) //重要：数据初始化，响应式
+    initProvide(vm) // 提供数据
+    callHook(vm, 'created') // 调用created钩子
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
