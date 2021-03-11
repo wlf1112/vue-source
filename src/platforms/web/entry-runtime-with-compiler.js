@@ -31,12 +31,12 @@ Vue.prototype.$mount = function (
     return this
   }
   
-  //解析option
+  // 获取选项
   const options = this.$options
-  // resolve template/el and convert to render function
+  // 若不存在render选项，则将template/el的设置转换为render函数
   if (!options.render) {
     let template = options.template
-    //模版解析
+    //模版解析，解析template选项
     if (template) {
       if (typeof template === 'string') {
         //template:'#demo'
@@ -59,6 +59,7 @@ Vue.prototype.$mount = function (
         return this
       }
     } else if (el) {
+      // 否则解析el选项
       template = getOuterHTML(el)
     }
     //如果模版存在，执行编译

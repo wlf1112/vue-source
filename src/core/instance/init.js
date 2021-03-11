@@ -51,13 +51,13 @@ export function initMixin (Vue: Class<Component>) {
     // expose real self
     //
     vm._self = vm
-    initLifecycle(vm) // $parent, $root, $children, $refs
+    initLifecycle(vm) // 设置$parent, $root, $children, $refs等组件关系属性
     initEvents(vm) //对父组件传入事件添加监听
-    initRender(vm) //声明$slots,$createElement()
+    initRender(vm) //初始化组件插槽、声明createElement方法
     callHook(vm, 'beforeCreate') //调用beforeCreate钩子
     initInjections(vm) // 注入数据（不会做响应式）
     initState(vm) //重要：数据初始化，响应式
-    initProvide(vm) // 提供数据
+    initProvide(vm) // 为后代提供数据
     callHook(vm, 'created') // 调用created钩子
 
     /* istanbul ignore if */
@@ -67,6 +67,7 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // 如果new的时候有el,就直接调用$mount
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
