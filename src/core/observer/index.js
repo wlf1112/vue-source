@@ -28,13 +28,7 @@ export function toggleObserving (value: boolean) {
   shouldObserve = value
 }
 
-/**
- * Observer class that is attached to each observed
- * object. Once attached, the observer converts the target
- * object's property keys into getter/setters that
- * collect dependencies and dispatch updates.
- */
-// 每一个响应式对象都会有一个ob
+// Observer的作用是给对象的属性添加getter和setter，用于依赖收集和派发更新
 export class Observer {
   value: any;
   dep: Dep;
