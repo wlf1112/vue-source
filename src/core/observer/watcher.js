@@ -68,9 +68,9 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
-    this.deps = []
-    this.newDeps = []
-    this.depIds = new Set()
+    this.deps = [] // Watcher实例持有的Dep实例的数据
+    this.newDeps = [] // Watcher实例持有的Dep实例的数据
+    this.depIds = new Set() 
     this.newDepIds = new Set()
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
