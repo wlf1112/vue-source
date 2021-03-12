@@ -87,7 +87,7 @@ Vue.prototype.$mount = function (
       }
     }
   }
-  //执行挂载
+  //执行挂载，此处mount指的是原先原型上的$mount
   return mount.call(this, el, hydrating)
 }
 
