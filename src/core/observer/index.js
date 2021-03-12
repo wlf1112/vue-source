@@ -113,11 +113,8 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
   }
 }
 
-/**
- * Attempt to create an observer instance for a value,
- * returns the new observer if successfully observed,
- * or the existing observer if the value already has one.
- */
+// observe 方法的作用：给非VNode的对象类型数据添加一个Observer，如果已经添加则直接返回，
+// 否则在满足一定条件下去实例化一个Observer对象实例
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
