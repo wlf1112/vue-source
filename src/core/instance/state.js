@@ -42,6 +42,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.set = function proxySetter (val) {
     this[sourceKey][key] = val
   }
+  //Object.defineProperty把把 target[sourceKey][key]的读写变成了对target[key]的读写
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
