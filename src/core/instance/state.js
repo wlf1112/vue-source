@@ -74,6 +74,7 @@ function initProps (vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false)
   }
+  // 遍历props配置
   for (const key in propsOptions) {
     keys.push(key)
     const value = validateProp(key, propsOptions, propsData, vm)
@@ -99,12 +100,14 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      // 调用defineReactive把每个prop对应的值变成响应式
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
     if (!(key in vm)) {
+      // 通过proxy把vm._props.xxx的访问代理到vm.xxx
       proxy(vm, `_props`, key)
     }
   }
