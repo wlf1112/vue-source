@@ -138,6 +138,8 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+// mountComponent先实例化一个渲染Watcher,在它的回调函数中会调用updateComponent
+// 方法，在此方法中调用vm._render方法先生成虚拟Node.最终调用vm._update更新DOM
 export function mountComponent (
   vm: Component,
   el: ?Element,
