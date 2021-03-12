@@ -22,9 +22,7 @@ let waiting = false
 let flushing = false
 let index = 0
 
-/**
- * Reset the scheduler's state.
- */
+// 将控制流程状态的变量恢复到初始值，把watcher队列清空
 function resetSchedulerState () {
   index = queue.length = activatedChildren.length = 0
   has = {}
@@ -80,15 +78,16 @@ function flushSchedulerQueue () {
   // 3.如果一个组件在父组件的 watcher 执行期间被销毁，那么它对应的 watcher 执行都可以被跳过，所以父组件的 watcher 应该先执行
   queue.sort((a, b) => a.id - b.id)
 
-  // do not cache length because more watchers might be pushed
-  // as we run existing watchers
-  for (index = 0; index < queue.length; index++) {
+  // 队列遍历
+  for (index = 0; index < queue.length; index++) {//每次遍历都会对queue.length求值
+    // 获取对应的watcher
     watcher = queue[index]
     if (watcher.before) {
       watcher.before()
     }
     id = watcher.id
     has[id] = null
+    //执行watcher.run()
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -110,7 +109,8 @@ function flushSchedulerQueue () {
   // keep copies of post queues before resetting state
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
-
+  
+  //状态恢复
   resetSchedulerState()
 
   // call component updated and activated hooks
