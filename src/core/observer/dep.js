@@ -57,7 +57,9 @@ Dep.target = null
 const targetStack = []
 
 export function pushTarget (target: ?Watcher) {
+  // 压栈
   targetStack.push(target)
+  // 把Dep.target赋值为当前的渲染Watcher
   Dep.target = target
 }
 
