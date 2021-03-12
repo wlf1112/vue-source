@@ -1,4 +1,6 @@
 /* @flow */
+//响应式对象核心：利用 Object.defineProperty给数据添加getter和setter，目的是为了在我们访问数据及写数据的时候能自动执行
+//一些逻辑：getter做的事情是依赖收集,setter做的事情是派发更新
 
 import Dep from './dep'
 import VNode from '../vdom/vnode'
@@ -134,9 +136,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
   return ob
 }
 
-/**
- * Define a reactive property on an Object.
- */
+// defineReactive定义一个响应式对象，给对象动态地添加getter和setter
 export function defineReactive (
   obj: Object,
   key: string,
