@@ -135,6 +135,9 @@ function initData (vm: Component) {
   const props = vm.$options.props
   const methods = vm.$options.methods
   let i = keys.length
+  // props优先级>methods优先级>data优先级
+  // 如果一个 key 在 props 中有定义了那么就不能在 data 和 methods 中出现了
+  // 如果一个 key 在 data 中出现了那么就不能在 methods 中出现了
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
