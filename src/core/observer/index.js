@@ -116,10 +116,11 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     return
   }
 
-  //观察者，已经存在直接返回，否则创建新实例
+  // 观察者，已经存在直接返回，否则创建新实例
+  // 当一个数据对象被观测之后将会在该对象上定义 __ob__ 属性
   let ob: Observer | void
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
-    //_ob_指的是ob的实例
+    //定义ob保存Observer 的实例
     ob = value.__ob__ 
   } else if (
     shouldObserve &&
