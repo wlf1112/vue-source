@@ -160,6 +160,8 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+
+  //去重，不存在才入队
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
@@ -181,6 +183,7 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 异步地刷新队列
       nextTick(flushSchedulerQueue)
     }
   }

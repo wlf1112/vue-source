@@ -713,6 +713,7 @@
    * A dep is an observable that can have multiple
    * directives subscribing to it.
    */
+  // Dep是对Watcher的一种管理
   var Dep = function Dep () {
     this.id = uid++;
     this.subs = [];
@@ -741,6 +742,7 @@
       // order
       subs.sort(function (a, b) { return a.id - b.id; });
     }
+    // 遍历所有的subs(Watcher的实例数组)，调用每个Watcher的update方法
     for (var i = 0, l = subs.length; i < l; i++) {
       subs[i].update();
     }
@@ -753,7 +755,9 @@
   var targetStack = [];
 
   function pushTarget (target) {
+    // 压栈
     targetStack.push(target);
+    // 把Dep.target赋值为当前的渲染Watcher
     Dep.target = target;
   }
 
@@ -918,13 +922,7 @@
     shouldObserve = value;
   }
 
-  /**
-   * Observer class that is attached to each observed
-   * object. Once attached, the observer converts the target
-   * object's property keys into getter/setters that
-   * collect dependencies and dispatch updates.
-   */
-  // 每一个响应式对象都会有一个ob
+  // Observer的作用是给对象的属性添加getter和setter，用于依赖收集和派发更新
   var Observer = function Observer (value) {
     this.value = value;
     //为什么在Observer里面声明dep?
@@ -997,20 +995,18 @@
     }
   }
 
-  /**
-   * Attempt to create an observer instance for a value,
-   * returns the new observer if successfully observed,
-   * or the existing observer if the value already has one.
-   */
+  // observe 方法的作用：给非VNode的对象类型数据添加一个Observer，如果已经添加则直接返回，
+  // 否则在满足一定条件下去实例化一个Observer对象实例
   function observe (value, asRootData) {
     if (!isObject(value) || value instanceof VNode) {
       return
     }
 
-    //观察者，已经存在直接返回，否则创建新实例
+    // 观察者，已经存在直接返回，否则创建新实例
+    // 当一个数据对象被观测之后将会在该对象上定义 __ob__ 属性
     var ob;
     if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
-      //_ob_指的是ob的实例
+      //定义ob保存Observer 的实例
       ob = value.__ob__; 
     } else if (
       shouldObserve &&
@@ -1027,9 +1023,7 @@
     return ob
   }
 
-  /**
-   * Define a reactive property on an Object.
-   */
+  // defineReactive定义一个响应式对象，给对象动态地添加getter和setter
   function defineReactive (
     obj,
     key,
@@ -1969,6 +1963,7 @@
   if (typeof Promise !== 'undefined' && isNative(Promise)) {
     var p = Promise.resolve();
     timerFunc = function () {
+      // 启动一个微任务
       p.then(flushCallbacks);
       // In problematic UIWebViews, Promise.then doesn't completely break, but
       // it can get stuck in a weird state where callbacks are pushed into the
@@ -2026,6 +2021,7 @@
     });
     if (!pending) {
       pending = true;
+      // 异步函数
       timerFunc();
     }
     // $flow-disable-line
@@ -3511,10 +3507,11 @@
     // so that we get proper render context inside it.
     // args order: tag, data, children, normalizationType, alwaysNormalize
     // internal version is used by render functions compiled from templates
+    // 模板编译成的render函数使用
     vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
     // normalization is always applied for the public version, used in
     // user-written render functions.
-    // render(h)此处的$createElement就是h
+    // render(h)此处的$createElement就是h，用户手写render方法使用
     vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
 
     // $attrs & $listeners are exposed for easier HOC creation.
@@ -4032,6 +4029,8 @@
     };
   }
 
+  // mountComponent先实例化一个渲染Watcher,在它的回调函数中会调用updateComponent
+  // 方法，在此方法中调用vm._render方法先生成虚拟Node.最终调用vm._update更新DOM
   function mountComponent (
     vm,
     el,
@@ -4080,6 +4079,7 @@
         measure(("vue " + name + " patch"), startTag, endTag);
       };
     } else {
+      // 用户$mount()时，定义updateComponent
       updateComponent = function () {
         vm._update(vm._render(), hydrating);
       };
@@ -4088,6 +4088,9 @@
     // we set this to vm._watcher inside the watcher's constructor
     // since the watcher's initial patch may call $forceUpdate (e.g. inside child
     // component's mounted hook), which relies on vm._watcher being already defined
+    //Watcher的作用：1.初始化的时候会执行回调函数；
+    //2.当 vm 实例中的监测的数据发生变化的时候执行回调函数
+    //实例化Watcher，首先进入Watcher的构造函数逻辑，然后会执行它的this.get()方法
     new Watcher(vm, updateComponent, noop, {
       before: function before () {
         if (vm._isMounted && !vm._isDestroyed) {
@@ -4099,8 +4102,11 @@
 
     // manually mounted instance, call mounted on self
     // mounted is called for render-created child components in its inserted hook
+    //vm.$vnode表示Vue实例的父虚拟Node,所以它为null表示当前是根Vue的实例
     if (vm.$vnode == null) {
+      //表示实例已经挂载了
       vm._isMounted = true;
+      //执行mounted钩子函数
       callHook(vm, 'mounted');
     }
     return vm
@@ -4255,9 +4261,7 @@
   var flushing = false;
   var index = 0;
 
-  /**
-   * Reset the scheduler's state.
-   */
+  // 将控制流程状态的变量恢复到初始值，把watcher队列清空
   function resetSchedulerState () {
     index = queue.length = activatedChildren.length = 0;
     has = {};
@@ -4306,25 +4310,23 @@
     flushing = true;
     var watcher, id;
 
-    // Sort queue before flush.
-    // This ensures that:
-    // 1. Components are updated from parent to child. (because parent is always
-    //    created before the child)
-    // 2. A component's user watchers are run before its render watcher (because
-    //    user watchers are created before the render watcher)
-    // 3. If a component is destroyed during a parent component's watcher run,
-    //    its watchers can be skipped.
+    
+    // queue.sort((a, b) => a.id - b.id) 对队列做了从小到大的排序，确保以下几点:
+    // 1.组件的更新由父到子；因为父组件的创建过程是先于子的，所以 watcher 的创建也是先父后子，执行顺序也应该保持先父后子
+    // 2.用户的自定义 watcher 要优先于渲染 watcher 执行；因为用户自定义 watcher 是在渲染 watcher 之前创建的
+    // 3.如果一个组件在父组件的 watcher 执行期间被销毁，那么它对应的 watcher 执行都可以被跳过，所以父组件的 watcher 应该先执行
     queue.sort(function (a, b) { return a.id - b.id; });
 
-    // do not cache length because more watchers might be pushed
-    // as we run existing watchers
-    for (index = 0; index < queue.length; index++) {
+    // 队列遍历
+    for (index = 0; index < queue.length; index++) {//每次遍历都会对queue.length求值
+      // 获取对应的watcher
       watcher = queue[index];
       if (watcher.before) {
         watcher.before();
       }
       id = watcher.id;
       has[id] = null;
+      //执行watcher.run()
       watcher.run();
       // in dev build, check and stop circular updates.
       if ( has[id] != null) {
@@ -4346,7 +4348,8 @@
     // keep copies of post queues before resetting state
     var activatedQueue = activatedChildren.slice();
     var updatedQueue = queue.slice();
-
+    
+    //状态恢复
     resetSchedulerState();
 
     // call component updated and activated hooks
@@ -4396,6 +4399,8 @@
    */
   function queueWatcher (watcher) {
     var id = watcher.id;
+
+    //去重，不存在才入队
     if (has[id] == null) {
       has[id] = true;
       if (!flushing) {
@@ -4417,6 +4422,7 @@
           flushSchedulerQueue();
           return
         }
+        // 异步地刷新队列
         nextTick(flushSchedulerQueue);
       }
     }
@@ -4459,9 +4465,9 @@
     this.id = ++uid$1; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
-    this.deps = [];
-    this.newDeps = [];
-    this.depIds = new _Set();
+    this.deps = []; // Watcher实例持有的Dep实例的数据
+    this.newDeps = []; // Watcher实例持有的Dep实例的数据
+    this.depIds = new _Set(); 
     this.newDepIds = new _Set();
     this.expression =  expOrFn.toString()
       ;
@@ -4647,6 +4653,7 @@
     sharedPropertyDefinition.set = function proxySetter (val) {
       this[sourceKey][key] = val;
     };
+    //Object.defineProperty把把 target[sourceKey][key]的读写变成了对target[key]的读写
     Object.defineProperty(target, key, sharedPropertyDefinition);
   }
 
@@ -4679,6 +4686,7 @@
     if (!isRoot) {
       toggleObserving(false);
     }
+    // 遍历props配置
     var loop = function ( key ) {
       keys.push(key);
       var value = validateProp(key, propsOptions, propsData, vm);
@@ -4708,6 +4716,7 @@
       // during Vue.extend(). We only need to proxy props defined at
       // instantiation here.
       if (!(key in vm)) {
+        // 通过proxy把vm._props.xxx的访问代理到vm.xxx
         proxy(vm, "_props", key);
       }
     };
@@ -4736,6 +4745,9 @@
     var props = vm.$options.props;
     var methods = vm.$options.methods;
     var i = keys.length;
+    // props优先级>methods优先级>data优先级
+    // 如果一个 key 在 props 中有定义了那么就不能在 data 和 methods 中出现了
+    // 如果一个 key 在 data 中出现了那么就不能在 methods 中出现了
     while (i--) {
       var key = keys[i];
       {
@@ -5019,13 +5031,13 @@
       // expose real self
       //
       vm._self = vm;
-      initLifecycle(vm); // $parent, $root, $children, $refs
+      initLifecycle(vm); // 设置$parent, $root, $children, $refs等组件关系属性
       initEvents(vm); //对父组件传入事件添加监听
-      initRender(vm); //声明$slots,$createElement()
+      initRender(vm); //初始化组件插槽、声明createElement方法
       callHook(vm, 'beforeCreate'); //调用beforeCreate钩子
       initInjections(vm); // 注入数据（不会做响应式）
       initState(vm); //重要：数据初始化，响应式
-      initProvide(vm); // 提供数据
+      initProvide(vm); // 为后代提供数据
       callHook(vm, 'created'); // 调用created钩子
 
       /* istanbul ignore if */
@@ -5035,6 +5047,7 @@
         measure(("vue " + (vm._name) + " init"), startTag, endTag);
       }
 
+      // 如果new的时候有el,就直接调用$mount
       if (vm.$options.el) {
         vm.$mount(vm.$options.el);
       }
@@ -5449,10 +5462,10 @@
 
     extend(Vue.options.components, builtInComponents);
 
-    initUse(Vue);
-    initMixin$1(Vue);
-    initExtend(Vue);
-    initAssetRegisters(Vue);
+    initUse(Vue); //实现Vue.use函数
+    initMixin$1(Vue); //实现Vue.mixin函数
+    initExtend(Vue); //实现Vue.extend函数
+    initAssetRegisters(Vue); //注册实现Vue.component/directive/filter
   }
 
   //定义全局api
@@ -6288,6 +6301,7 @@
       }
     }
 
+    //diff算法
     function patchVnode (
       oldVnode,
       vnode,
@@ -6329,30 +6343,43 @@
         return
       }
 
+      // 执行一些组件钩子
       var i;
       var data = vnode.data;
       if (isDef(data) && isDef(i = data.hook) && isDef(i = i.prepatch)) {
         i(oldVnode, vnode);
       }
 
+      // 先查找新旧节点是否存在孩子
       var oldCh = oldVnode.children;
       var ch = vnode.children;
+
+      //属性更新  
       if (isDef(data) && isPatchable(vnode)) {
         for (i = 0; i < cbs.update.length; ++i) { cbs.update[i](oldVnode, vnode); }
         if (isDef(i = data.hook) && isDef(i = i.update)) { i(oldVnode, vnode); }
       }
+
+      // 判断是否是元素
       if (isUndef(vnode.text)) {
+        //双方都有孩子
         if (isDef(oldCh) && isDef(ch)) {
+          //比孩子，reorder
           if (oldCh !== ch) { updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly); }
         } else if (isDef(ch)) {
+          // 新节点有孩子
           {
             checkDuplicateKeys(ch);
           }
+          //清空老节点文本
           if (isDef(oldVnode.text)) { nodeOps.setTextContent(elm, ''); }
+          //创建孩子并追加
           addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
         } else if (isDef(oldCh)) {
+          //老节点有孩子，删除即可
           removeVnodes(elm, oldCh, 0, oldCh.length - 1);
         } else if (isDef(oldVnode.text)) {
+          //
           nodeOps.setTextContent(elm, '');
         }
       } else if (oldVnode.text !== vnode.text) {
@@ -6489,7 +6516,9 @@
       }
     }
 
+    // 为什么返回patch
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
+      // 如果新的虚拟dom树不存在，则删除
       if (isUndef(vnode)) {
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
         return
@@ -6498,16 +6527,20 @@
       var isInitialPatch = false;
       var insertedVnodeQueue = [];
 
+      //如果老的dom树不存在，新增
       if (isUndef(oldVnode)) {
         // empty mount (likely as component), create new root element
         isInitialPatch = true;
         createElm(vnode, insertedVnodeQueue);
       } else {
+        // 如果传入的是真实节点，则是初始化操作
         var isRealElement = isDef(oldVnode.nodeType);
         if (!isRealElement && sameVnode(oldVnode, vnode)) {
           // patch existing root node
+          //存在新旧dom,执行diff
           patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly);
         } else {
+          // 初始化过程，创建新dom树，追加到body，删除宿主元素
           if (isRealElement) {
             // mounting to a real element
             // check if this is server-rendered content and if we can perform
@@ -9072,13 +9105,13 @@
   Vue.prototype.__patch__ = inBrowser ? patch : noop;
 
   // public mount method
-  //实现$mount
+  //实现$mount，为了复用，可以被runtime only版本的Vue直接使用
   Vue.prototype.$mount = function (
     el,
     hydrating
   ) {
     el = el && inBrowser ? query(el) : undefined;
-    //初始化，将首次渲染结果替换el
+    //初始化，将首次渲染结果替换el，挂载组件
     return mountComponent(this, el, hydrating)
   };
 
@@ -11920,12 +11953,12 @@
       return this
     }
     
-    //解析option
+    // 获取选项
     var options = this.$options;
-    // resolve template/el and convert to render function
+    // 若不存在render选项，则将template/el的设置转换为render函数
     if (!options.render) {
       var template = options.template;
-      //模版解析
+      //模版解析，解析template选项
       if (template) {
         if (typeof template === 'string') {
           //template:'#demo'
@@ -11948,6 +11981,7 @@
           return this
         }
       } else if (el) {
+        // 否则解析el选项
         template = getOuterHTML(el);
       }
       //如果模版存在，执行编译
@@ -11977,7 +12011,7 @@
         }
       }
     }
-    //执行挂载
+    //执行挂载，此处mount指的是原先原型上的$mount
     return mount.call(this, el, hydrating)
   };
 

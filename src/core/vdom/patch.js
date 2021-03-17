@@ -401,6 +401,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  //重排算法
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     let oldStartIdx = 0
     let newStartIdx = 0
@@ -498,6 +499,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  //diff算法
   function patchVnode (
     oldVnode,
     vnode,
@@ -539,33 +541,47 @@ export function createPatchFunction (backend) {
       return
     }
 
+    // 执行一些组件钩子
     let i
     const data = vnode.data
     if (isDef(data) && isDef(i = data.hook) && isDef(i = i.prepatch)) {
       i(oldVnode, vnode)
     }
 
+    // 先查找新旧节点是否存在孩子
     const oldCh = oldVnode.children
     const ch = vnode.children
+
+    //属性更新  
     if (isDef(data) && isPatchable(vnode)) {
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
       if (isDef(i = data.hook) && isDef(i = i.update)) i(oldVnode, vnode)
     }
+
+    // 判断是否是元素
     if (isUndef(vnode.text)) {
+      //双方都有孩子
       if (isDef(oldCh) && isDef(ch)) {
+        //比孩子，reorder
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
       } else if (isDef(ch)) {
+        // 新节点有孩子
         if (process.env.NODE_ENV !== 'production') {
           checkDuplicateKeys(ch)
         }
+        //清空老节点文本
         if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
+        //创建孩子并追加
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)
       } else if (isDef(oldCh)) {
+        //老节点有孩子，删除即可
         removeVnodes(elm, oldCh, 0, oldCh.length - 1)
       } else if (isDef(oldVnode.text)) {
+        //老节点存在文本，清空
         nodeOps.setTextContent(elm, '')
       }
     } else if (oldVnode.text !== vnode.text) {
+      //双方都是文本节点，更新文本
       nodeOps.setTextContent(elm, vnode.text)
     }
     if (isDef(data)) {
@@ -697,7 +713,9 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 为什么返回patch
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 如果新的虚拟dom树不存在，则删除
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
@@ -706,16 +724,20 @@ export function createPatchFunction (backend) {
     let isInitialPatch = false
     const insertedVnodeQueue = []
 
+    //如果老的dom树不存在，新增
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
+      // 如果传入的是真实节点，则是初始化操作
       const isRealElement = isDef(oldVnode.nodeType)
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
+        //存在新旧dom,执行diff
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
+        // 初始化过程，创建新dom树，追加到body，删除宿主元素
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
